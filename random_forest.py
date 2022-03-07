@@ -24,17 +24,22 @@ class DecisionTreeRegressor(BaseEstimator, RegressorMixin):
             res = -1*py*log2_py
             e+=res
         return e
+    
+    def _sse(self, y):
+        y_pred = np.mean(y)
+        e = np.sqrt(((y - y_pred)**2).sum())
+        return e
 
     def _gain(self, y,x):
         g = 0
         val_counts = x.value_counts()
         for i in list(val_counts.index):
-            g += ((val_counts[i] / len(y)) * self._entropy(y[x == i]))
-        return self._entropy(y) - g
+            g += ((val_counts[i] / len(y)) * self._sse(y[x == i]))
+        return self._sse(y) - g
 
     def _gain_ratio(self, y,x):
         g = self._gain(y, x)
-        return g/self._entropy(y)
+        return g/self._sse(y)
 
     def _select_split(self,X,y):
         col = None
@@ -149,10 +154,7 @@ class DecisionTreeRegressor(BaseEstimator, RegressorMixin):
     
     def score(self, X):
         assert type(X) == pd.DataFrame
-        X.apply(lambda x: self._make_prediction(self._rules, x, self._default))
-        
-
-        
+        return X.apply(lambda x: self._make_prediction(self._rules, x, self._default))
 
 
 def get_learner(X,y,max_depth=1):
@@ -184,3 +186,8 @@ def vote(trees,X):
         votes[:,i] = tree.predict(X)
     y = pd.DataFrame(votes,index=X.index).mode(axis=1).iloc[:,0].astype(int)
     return y
+
+def sse(y):
+    y_pred = np.mean(y)
+    e = sqrt(((y - y_pred)**2).sum())
+    return s
